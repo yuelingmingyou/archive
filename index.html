@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI聊天档案室 · 本地存储</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -10,7 +10,7 @@
   <div class="archive-container">
     <header class="archive-header">
       <h1>📁 对话档案室</h1>
-      <p class="subhead">多版本左右滑动 · 选中文字划重点</p>
+      <p class="subhead">存储 · 多版本滑动切换 · 划重点</p>
     </header>
 
     <main class="archive-main">
@@ -23,11 +23,11 @@
         <div class="ai-response-area">
           <label for="aiSelect">AI 来源：</label>
           <select id="aiSelect">
-            <option value="ChatGPT">ChatGPT</option>
-            <option value="Claude">Claude</option>
+            <option value="DeepSeek">DeepSeek</option>
+            <option value="Kimi">Kimi</option>
+            <option value="元宝">元宝</option>
             <option value="Gemini">Gemini</option>
-            <option value="Copilot">Copilot</option>
-            <option value="文心一言">文心一言</option>
+            <option value="ChatGPT">ChatGPT</option>
             <option value="其他">其他</option>
           </select>
           <textarea id="responseInput" placeholder="粘贴或输入该 AI 的回答…" rows="3"></textarea>
@@ -36,7 +36,7 @@
           <button id="saveEntryBtn" class="btn primary">💾 保存回答</button>
           <button id="clearFormBtn" class="btn secondary">清空输入</button>
         </div>
-        <p class="hint">同一个问题会归到同一张卡片，用左右箭头切换不同 AI 的版本。选中回答里的文字，点「划重点」即可下划线。</p>
+        <p class="hint">同一个问题保存多个 AI 回答后，可在卡片内左右滑动切换查看。</p>
       </section>
 
       <!-- 档案列表 -->
@@ -52,7 +52,7 @@
     </main>
 
     <footer class="archive-footer">
-      <p>💡 数据保存在浏览器本地 (localStorage) · 选中文字后点「划重点」加下划线</p>
+      <p>💡 数据保存在浏览器本地 · 选中文字后点「标记重点」即可划线</p>
     </footer>
   </div>
 
