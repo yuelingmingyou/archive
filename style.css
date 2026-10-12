@@ -1,4 +1,4 @@
-/* style.css — 档案室风格 */
+/* style.css — 档案室风格 + 左右滑动 + 划重点 */
 * {
   margin: 0;
   padding: 0;
@@ -7,7 +7,7 @@
 }
 
 body {
-  background: #e8e0d3;  /* 旧纸色 */
+  background: #e8e0d3;
   background-image: 
     linear-gradient(rgba(180, 150, 120, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(180, 150, 120, 0.1) 1px, transparent 1px);
@@ -15,22 +15,21 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 20px;
+  align-items: flex-start;
+  padding: 16px;
 }
 
 .archive-container {
-  max-width: 1100px;
+  max-width: 800px;
   width: 100%;
-  background: #f7f3eb;  /* 牛皮纸基底 */
+  background: #f7f3eb;
   border: 8px double #7a5a3e;
   border-radius: 16px;
   box-shadow: 12px 12px 0 rgba(90, 60, 30, 0.2);
-  padding: 24px 28px;
+  padding: 22px 20px;
   position: relative;
 }
 
-/* 档案室标签装饰 */
 .archive-container::before {
   content: "📜 档案";
   position: absolute;
@@ -38,7 +37,7 @@ body {
   left: 40px;
   background: #7a5a3e;
   color: #f7f3eb;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: bold;
   padding: 2px 18px;
   border-radius: 30px;
@@ -48,13 +47,13 @@ body {
 
 .archive-header {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   border-bottom: 2px dashed #b8a48c;
   padding-bottom: 12px;
 }
 
 .archive-header h1 {
-  font-size: 2.4rem;
+  font-size: 2rem;
   color: #3e2e1e;
   letter-spacing: 2px;
   text-shadow: 2px 2px 0 #d9c7b0;
@@ -64,23 +63,22 @@ body {
   color: #6b4f36;
   font-style: italic;
   margin-top: 6px;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
-/* 卡片通用样式 */
 .card {
   background: #fefcf8;
   border: 2px solid #b8a48c;
   border-radius: 12px;
-  padding: 18px 22px;
+  padding: 16px 18px;
   box-shadow: 4px 4px 0 #cbb9a6;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .new-entry h2 {
   color: #4a3622;
-  font-size: 1.4rem;
-  margin-bottom: 16px;
+  font-size: 1.25rem;
+  margin-bottom: 14px;
   border-left: 6px solid #9e7f63;
   padding-left: 12px;
 }
@@ -114,13 +112,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .ai-response-area label {
   font-weight: bold;
   color: #4a3622;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .ai-response-area select {
@@ -135,16 +133,16 @@ body {
 
 .action-buttons {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .btn {
   border: none;
   border-radius: 40px;
-  padding: 10px 24px;
+  padding: 9px 22px;
   font-weight: bold;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: 0.15s;
   box-shadow: 2px 2px 0 #b8a48c;
@@ -181,34 +179,35 @@ body {
 }
 
 .btn.small {
-  padding: 6px 16px;
-  font-size: 0.85rem;
+  padding: 5px 14px;
+  font-size: 0.8rem;
 }
 
 .hint {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #8b7a67;
-  margin-top: 14px;
+  margin-top: 12px;
   font-style: italic;
+  line-height: 1.4;
 }
 
-/* 档案列表 */
+/* ---------- 档案列表 ---------- */
 .archive-list-section {
-  margin-top: 20px;
+  margin-top: 16px;
 }
 
 .list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   flex-wrap: wrap;
   gap: 10px;
 }
 
 .list-header h2 {
   color: #4a3622;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   border-left: 6px solid #9e7f63;
   padding-left: 12px;
 }
@@ -216,13 +215,9 @@ body {
 .archive-list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  max-height: 580px;
-  overflow-y: auto;
-  padding-right: 8px;
+  gap: 18px;
 }
 
-/* 自定义滚动条 */
 .archive-list::-webkit-scrollbar {
   width: 10px;
 }
@@ -236,41 +231,57 @@ body {
   border: 2px solid #e0d4c4;
 }
 
-/* 档案卡片 */
+/* ---------- 单个档案卡片 ---------- */
 .archive-card {
   background: #fefcf8;
   border: 2px solid #b8a48c;
   border-left: 10px solid #7a5a3e;
   border-radius: 10px;
-  padding: 16px 20px;
+  padding: 14px 16px;
   box-shadow: 4px 4px 0 #cbb9a6;
   transition: 0.1s;
 }
 
 .archive-card .question {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #3e2e1e;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   word-break: break-word;
   border-bottom: 1px dashed #cbb9a6;
   padding-bottom: 8px;
 }
 
-.response-item {
-  background: #f6efe6;
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  border: 1px solid #d9c7b0;
-  transition: 0.1s;
+/* ---------- 轮播 ---------- */
+.carousel {
+  position: relative;
 }
 
-.response-header {
+.carousel-viewport {
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.3s ease;
+  will-change: transform;
+}
+
+.carousel-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  padding: 12px 14px;
+  background: #f6efe6;
+  border-radius: 8px;
+  border: 1px solid #d9c7b0;
+}
+
+.slide-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -278,90 +289,158 @@ body {
 .ai-badge {
   background: #7a5a3e;
   color: #f7f3eb;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: bold;
-  padding: 2px 12px;
+  padding: 3px 12px;
   border-radius: 30px;
   letter-spacing: 0.5px;
   display: inline-block;
 }
 
-.underline-toggle {
+.slide-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nav-btn {
+  background: #e0d4c4;
+  border: 1.5px solid #b8a48c;
+  color: #3e2e1e;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #d2c2ae;
+  transform: scale(1.05);
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.slide-indicator {
+  font-size: 0.85rem;
+  color: #5e3e28;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
+  user-select: none;
+}
+
+.slide-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.small-btn {
   background: transparent;
   border: 1.5px solid #9e7f63;
   color: #5e3e28;
   border-radius: 30px;
-  padding: 4px 14px;
-  font-size: 0.75rem;
+  padding: 4px 12px;
+  font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
   transition: 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  white-space: nowrap;
 }
 
-.underline-toggle:hover {
+.small-btn:hover {
   background: #e0d4c4;
 }
 
-.underline-toggle.active {
-  background: #5e3e28;
-  color: #f7f3eb;
-  border-color: #5e3e28;
+.small-btn.danger-btn {
+  border-color: #a14e3c;
+  color: #a14e3c;
 }
 
+.small-btn.danger-btn:hover {
+  background: #f3ddd8;
+}
+
+/* ---------- 回答文本 & 划重点 ---------- */
 .response-text {
   color: #2d241b;
-  line-height: 1.5;
+  line-height: 1.65;
   word-break: break-word;
   font-size: 0.95rem;
   white-space: pre-wrap;
+  user-select: text;
+  -webkit-user-select: text;
 }
 
-/* 下划线样式 — 重点标记 */
-.response-text.underlined {
+/* 划重点的下划线样式 */
+.underline-mark {
   text-decoration: underline;
   text-decoration-color: #a14e3c;
-  text-decoration-thickness: 3px;
-  text-underline-offset: 4px;
-  background: rgba(161, 78, 60, 0.05);
-  padding: 2px 4px;
-  border-radius: 4px;
+  text-decoration-thickness: 2.5px;
+  text-underline-offset: 3px;
+  background: rgba(161, 78, 60, 0.07);
+  border-radius: 3px;
+  padding: 0 2px;
 }
 
-/* 空状态 */
 .empty-state {
   text-align: center;
-  padding: 48px 20px;
+  padding: 44px 20px;
   color: #8b7a67;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-style: italic;
   background: #f6efe6;
   border-radius: 12px;
   border: 2px dashed #b8a48c;
 }
 
-/* 底部 */
 .archive-footer {
-  margin-top: 26px;
+  margin-top: 22px;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #8b7a67;
   border-top: 2px dashed #d9c7b0;
-  padding-top: 14px;
+  padding-top: 12px;
+  line-height: 1.4;
 }
 
-/* 响应式 */
-@media (max-width: 600px) {
+/* 移动端优化 */
+@media (max-width: 500px) {
   .archive-container {
-    padding: 16px;
+    padding: 14px 12px;
+    border-width: 5px;
   }
   .archive-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+  }
+  .subhead {
+    font-size: 0.8rem;
   }
   .btn {
     padding: 8px 16px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+  }
+  .slide-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .nav-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 1rem;
   }
 }
