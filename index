@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI聊天档案室 · 本地存储</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="archive-container">
+    <header class="archive-header">
+      <h1>📁 对话档案室</h1>
+      <p class="subhead">存储 · 多版本 · 标记你最喜欢的回答</p>
+    </header>
+
+    <main class="archive-main">
+      <!-- 新建对话卡片 -->
+      <section class="new-entry card">
+        <h2>📌 新建提问档案</h2>
+        <div class="question-area">
+          <textarea id="questionInput" placeholder="输入你的问题…（例如：如何学习JavaScript？）" rows="2"></textarea>
+        </div>
+        <div class="ai-response-area">
+          <label for="aiSelect">AI 来源：</label>
+          <select id="aiSelect">
+            <option value="ChatGPT">ChatGPT</option>
+            <option value="Claude">Claude</option>
+            <option value="Gemini">Gemini</option>
+            <option value="Copilot">Copilot</option>
+            <option value="文心一言">文心一言</option>
+            <option value="其他">其他</option>
+          </select>
+          <textarea id="responseInput" placeholder="粘贴或输入该 AI 的回答…" rows="3"></textarea>
+        </div>
+        <div class="action-buttons">
+          <button id="saveEntryBtn" class="btn primary">💾 保存回答</button>
+          <button id="clearFormBtn" class="btn secondary">清空输入</button>
+        </div>
+        <p class="hint">每个问题可以保存多个 AI 回答，之后用下划线标记最喜欢的一个。</p>
+      </section>
+
+      <!-- 档案列表 (动态渲染) -->
+      <section class="archive-list-section">
+        <div class="list-header">
+          <h2>🗂️ 已存档的对话</h2>
+          <button id="clearAllBtn" class="btn danger small">清空所有档案</button>
+        </div>
+        <div id="archiveList" class="archive-list">
+          <!-- 动态插入档案卡片 -->
+          <div class="empty-state">还没有任何档案，添加第一条吧 ✨</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="archive-footer">
+      <p>💡 数据保存在浏览器本地 (localStorage) · 点击「下划线」标记最喜欢的回答</p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
