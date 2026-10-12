@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AI聊天档案室 · 本地存储</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -10,7 +10,7 @@
   <div class="archive-container">
     <header class="archive-header">
       <h1>📁 对话档案室</h1>
-      <p class="subhead">存储 · 多版本 · 标记你最喜欢的回答</p>
+      <p class="subhead">多版本左右滑动 · 选中文字划重点</p>
     </header>
 
     <main class="archive-main">
@@ -36,24 +36,23 @@
           <button id="saveEntryBtn" class="btn primary">💾 保存回答</button>
           <button id="clearFormBtn" class="btn secondary">清空输入</button>
         </div>
-        <p class="hint">每个问题可以保存多个 AI 回答，之后用下划线标记最喜欢的一个。</p>
+        <p class="hint">同一个问题会归到同一张卡片，用左右箭头切换不同 AI 的版本。选中回答里的文字，点「划重点」即可下划线。</p>
       </section>
 
-      <!-- 档案列表 (动态渲染) -->
+      <!-- 档案列表 -->
       <section class="archive-list-section">
         <div class="list-header">
           <h2>🗂️ 已存档的对话</h2>
           <button id="clearAllBtn" class="btn danger small">清空所有档案</button>
         </div>
         <div id="archiveList" class="archive-list">
-          <!-- 动态插入档案卡片 -->
           <div class="empty-state">还没有任何档案，添加第一条吧 ✨</div>
         </div>
       </section>
     </main>
 
     <footer class="archive-footer">
-      <p>💡 数据保存在浏览器本地 (localStorage) · 点击「下划线」标记最喜欢的回答</p>
+      <p>💡 数据保存在浏览器本地 (localStorage) · 选中文字后点「划重点」加下划线</p>
     </footer>
   </div>
 
