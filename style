@@ -1,0 +1,367 @@
+/* style.css — 档案室风格 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', 'Courier New', 'SF Mono', monospace;
+}
+
+body {
+  background: #e8e0d3;  /* 旧纸色 */
+  background-image: 
+    linear-gradient(rgba(180, 150, 120, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(180, 150, 120, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.archive-container {
+  max-width: 1100px;
+  width: 100%;
+  background: #f7f3eb;  /* 牛皮纸基底 */
+  border: 8px double #7a5a3e;
+  border-radius: 16px;
+  box-shadow: 12px 12px 0 rgba(90, 60, 30, 0.2);
+  padding: 24px 28px;
+  position: relative;
+}
+
+/* 档案室标签装饰 */
+.archive-container::before {
+  content: "📜 档案";
+  position: absolute;
+  top: -12px;
+  left: 40px;
+  background: #7a5a3e;
+  color: #f7f3eb;
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 2px 18px;
+  border-radius: 30px;
+  letter-spacing: 2px;
+  box-shadow: 2px 2px 0 #3e2e1e;
+}
+
+.archive-header {
+  text-align: center;
+  margin-bottom: 28px;
+  border-bottom: 2px dashed #b8a48c;
+  padding-bottom: 12px;
+}
+
+.archive-header h1 {
+  font-size: 2.4rem;
+  color: #3e2e1e;
+  letter-spacing: 2px;
+  text-shadow: 2px 2px 0 #d9c7b0;
+}
+
+.subhead {
+  color: #6b4f36;
+  font-style: italic;
+  margin-top: 6px;
+  font-size: 1rem;
+}
+
+/* 卡片通用样式 */
+.card {
+  background: #fefcf8;
+  border: 2px solid #b8a48c;
+  border-radius: 12px;
+  padding: 18px 22px;
+  box-shadow: 4px 4px 0 #cbb9a6;
+  margin-bottom: 24px;
+}
+
+.new-entry h2 {
+  color: #4a3622;
+  font-size: 1.4rem;
+  margin-bottom: 16px;
+  border-left: 6px solid #9e7f63;
+  padding-left: 12px;
+}
+
+.question-area textarea,
+.ai-response-area textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid #cbb9a6;
+  border-radius: 8px;
+  background: #fffcf7;
+  font-size: 1rem;
+  color: #2d241b;
+  resize: vertical;
+  outline: none;
+  transition: 0.2s;
+}
+
+.question-area textarea:focus,
+.ai-response-area textarea:focus {
+  border-color: #7a5a3e;
+  box-shadow: 0 0 0 3px rgba(122, 90, 62, 0.2);
+}
+
+.question-area textarea {
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.ai-response-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.ai-response-area label {
+  font-weight: bold;
+  color: #4a3622;
+  font-size: 0.95rem;
+}
+
+.ai-response-area select {
+  padding: 8px 12px;
+  border: 2px solid #cbb9a6;
+  border-radius: 8px;
+  background: #fffcf7;
+  font-size: 1rem;
+  width: fit-content;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: none;
+  border-radius: 40px;
+  padding: 10px 24px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: 0.15s;
+  box-shadow: 2px 2px 0 #b8a48c;
+  letter-spacing: 0.5px;
+}
+
+.btn.primary {
+  background: #5e3e28;
+  color: #f7f3eb;
+}
+
+.btn.primary:hover {
+  background: #3f2c1c;
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #b8a48c;
+}
+
+.btn.secondary {
+  background: #e0d4c4;
+  color: #3e2e1e;
+}
+
+.btn.secondary:hover {
+  background: #d2c2ae;
+}
+
+.btn.danger {
+  background: #a14e3c;
+  color: white;
+}
+
+.btn.danger:hover {
+  background: #823a2b;
+}
+
+.btn.small {
+  padding: 6px 16px;
+  font-size: 0.85rem;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: #8b7a67;
+  margin-top: 14px;
+  font-style: italic;
+}
+
+/* 档案列表 */
+.archive-list-section {
+  margin-top: 20px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.list-header h2 {
+  color: #4a3622;
+  font-size: 1.6rem;
+  border-left: 6px solid #9e7f63;
+  padding-left: 12px;
+}
+
+.archive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 580px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* 自定义滚动条 */
+.archive-list::-webkit-scrollbar {
+  width: 10px;
+}
+.archive-list::-webkit-scrollbar-track {
+  background: #e0d4c4;
+  border-radius: 10px;
+}
+.archive-list::-webkit-scrollbar-thumb {
+  background: #9e7f63;
+  border-radius: 10px;
+  border: 2px solid #e0d4c4;
+}
+
+/* 档案卡片 */
+.archive-card {
+  background: #fefcf8;
+  border: 2px solid #b8a48c;
+  border-left: 10px solid #7a5a3e;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 4px 4px 0 #cbb9a6;
+  transition: 0.1s;
+}
+
+.archive-card .question {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #3e2e1e;
+  margin-bottom: 14px;
+  word-break: break-word;
+  border-bottom: 1px dashed #cbb9a6;
+  padding-bottom: 8px;
+}
+
+.response-item {
+  background: #f6efe6;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: 1px solid #d9c7b0;
+  transition: 0.1s;
+}
+
+.response-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-badge {
+  background: #7a5a3e;
+  color: #f7f3eb;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 12px;
+  border-radius: 30px;
+  letter-spacing: 0.5px;
+  display: inline-block;
+}
+
+.underline-toggle {
+  background: transparent;
+  border: 1.5px solid #9e7f63;
+  color: #5e3e28;
+  border-radius: 30px;
+  padding: 4px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.underline-toggle:hover {
+  background: #e0d4c4;
+}
+
+.underline-toggle.active {
+  background: #5e3e28;
+  color: #f7f3eb;
+  border-color: #5e3e28;
+}
+
+.response-text {
+  color: #2d241b;
+  line-height: 1.5;
+  word-break: break-word;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
+/* 下划线样式 — 重点标记 */
+.response-text.underlined {
+  text-decoration: underline;
+  text-decoration-color: #a14e3c;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+  background: rgba(161, 78, 60, 0.05);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: #8b7a67;
+  font-size: 1.1rem;
+  font-style: italic;
+  background: #f6efe6;
+  border-radius: 12px;
+  border: 2px dashed #b8a48c;
+}
+
+/* 底部 */
+.archive-footer {
+  margin-top: 26px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #8b7a67;
+  border-top: 2px dashed #d9c7b0;
+  padding-top: 14px;
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .archive-container {
+    padding: 16px;
+  }
+  .archive-header h1 {
+    font-size: 1.8rem;
+  }
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+}
