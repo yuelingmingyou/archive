@@ -1,6 +1,12 @@
-// script.js — 本地存储 + 轮播 + 划重点
+// script.js — 本地存储 + 多版本滑动 + 局部划线
 
 const STORAGE_KEY = 'ai_chat_archive_v2';
+
+// 数据结构：
+// [{ id, question, responses: [{ id, ai, text, highlights: [{start, end}] }] }]
+// highlights 存储被标记文字在原文本中的字符索引区间
+
+let archiveData = [];
 
 // ---------- DOM ----------
 const questionInput = document.getElementById('questionInput');
@@ -11,27 +17,20 @@ const clearFormBtn = document.getElementById('clearFormBtn');
 const archiveListDiv = document.getElementById('archiveList');
 const clearAllBtn = document.getElementById('clearAllBtn');
 
-// ---------- 数据 ----------
-// { id, question, responses: [{ id, ai, text, marks: [{ start, end }] }] }
-let archiveData = [];
-
-// 用于记录每张卡片当前显示的 slide 索引 { entryId: index }
-const carouselState = {};
-
-// ---------- 工具 ----------
+// ---------- 存储 ----------
 function loadFromStorage() {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     try {
       archiveData = JSON.parse(stored);
-      // 兼容旧数据：补全 marks 字段
-      archiveData.forEach(entry => {
-        entry.responses.forEach(res => {
-          if (!Array.isArray(res.marks)) res.marks = [];
+      // 兼容旧数据：确保每个 response 有 highlights 数组
+      archiveData.forEach(item => {
+        item.responses.forEach(res => {
+          if (!Array.isArray(res.highlights)) res.highlights = [];
         });
       });
     } catch (e) {
-      console.error('读取失败', e);
+      console.error('读取存档失败', e);
       archiveData = [];
     }
   } else {
@@ -47,46 +46,36 @@ function generateId() {
   return Date.now() + Math.random().toString(36).substring(2, 8);
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-// 把纯文本 + 下划线区间渲染成 HTML
-// marks: [{start, end}] 基于原始纯文本的索引
-function renderTextWithMarks(text, marks) {
-  if (!marks || marks.length === 0) {
+// ---------- 根据 highlights 生成带 <mark> 的 HTML ----------
+// text: 原始文本；highlights: [{start, end}] 不重叠区间（已排序）
+function buildHighlightedHTML(text, highlights) {
+  if (!highlights || highlights.length === 0) {
     return escapeHtml(text);
   }
-  // 排序 & 合并重叠区间
-  const sorted = [...marks].sort((a, b) => a.start - b.start);
+  // 合并重叠区间
+  const sorted = [...highlights].sort((a, b) => a.start - b.start);
   const merged = [];
-  for (const m of sorted) {
+  for (const h of sorted) {
     if (merged.length === 0) {
-      merged.push({ ...m });
+      merged.push({ ...h });
     } else {
       const last = merged[merged.length - 1];
-      if (m.start <= last.end) {
-        last.end = Math.max(last.end, m.end);
+      if (h.start <= last.end) {
+        last.end = Math.max(last.end, h.end);
       } else {
-        merged.push({ ...m });
+        merged.push({ ...h });
       }
     }
   }
 
   let html = '';
   let cursor = 0;
-  for (const m of merged) {
-    const start = Math.max(0, Math.min(m.start, text.length));
-    const end = Math.max(start, Math.min(m.end, text.length));
-    if (start > cursor) {
-      html += escapeHtml(text.slice(cursor, start));
+  for (const h of merged) {
+    if (h.start > cursor) {
+      html += escapeHtml(text.slice(cursor, h.start));
     }
-    if (end > start) {
-      html += `<span class="underline-mark">${escapeHtml(text.slice(start, end))}</span>`;
-    }
-    cursor = Math.max(cursor, end);
+    html += `<mark class="highlight">${escapeHtml(text.slice(h.start, h.end))}</mark>`;
+    cursor = h.end;
   }
   if (cursor < text.length) {
     html += escapeHtml(text.slice(cursor));
@@ -94,7 +83,13 @@ function renderTextWithMarks(text, marks) {
   return html;
 }
 
-// ---------- 渲染 ----------
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// ---------- 渲染档案列表 ----------
 function renderArchive() {
   if (!archiveData.length) {
     archiveListDiv.innerHTML = `<div class="empty-state">还没有任何档案，添加第一条吧 ✨</div>`;
@@ -102,235 +97,243 @@ function renderArchive() {
   }
 
   const reversed = [...archiveData].reverse();
-
   let html = '';
+
   reversed.forEach(entry => {
     const entryId = entry.id;
     const total = entry.responses.length;
-    // 保证 carouselState 有值
-    if (carouselState[entryId] === undefined || carouselState[entryId] >= total) {
-      carouselState[entryId] = 0;
-    }
-    const current = carouselState[entryId];
 
+    // 每一个 slide
     let slidesHtml = '';
     entry.responses.forEach((res, idx) => {
-      const markedHtml = renderTextWithMarks(res.text, res.marks);
+      const textHtml = buildHighlightedHTML(res.text, res.highlights);
       slidesHtml += `
-        <div class="carousel-slide" data-entry-id="${entryId}" data-res-id="${res.id}" data-index="${idx}">
-          <div class="slide-header">
-            <span class="ai-badge">${escapeHtml(res.ai)}</span>
-            <div class="slide-actions">
-              <button class="small-btn" data-action="mark" data-entry-id="${entryId}" data-res-id="${res.id}">✏️ 划重点</button>
-              <button class="small-btn danger-btn" data-action="delete-res" data-entry-id="${entryId}" data-res-id="${res.id}">删除</button>
+        <div class="slide" data-entry-id="${entryId}" data-res-id="${res.id}">
+          <div class="slide-inner">
+            <div class="response-header">
+              <span class="ai-badge">${escapeHtml(res.ai)}</span>
+              <div class="slide-actions">
+                <button class="btn-mark" data-action="mark" data-entry-id="${entryId}" data-res-id="${res.id}">✏️ 标记重点</button>
+                <button class="btn-mark" data-action="clear-mark" data-entry-id="${entryId}" data-res-id="${res.id}">清除划线</button>
+              </div>
             </div>
+            <div class="response-text" data-raw-id="${res.id}">${textHtml}</div>
           </div>
-          <div class="response-text" id="res-text-${res.id}">${markedHtml}</div>
         </div>
       `;
     });
 
+    // dots
+    let dotsHtml = '';
+    for (let i = 0; i < total; i++) {
+      dotsHtml += `<button class="dot ${i === 0 ? 'active' : ''}" data-action="dot" data-entry-id="${entryId}" data-index="${i}"></button>`;
+    }
+
     html += `
-      <div class="archive-card" data-entry-id="${entryId}">
+      <div class="archive-card" data-entry-id="${entryId}" data-current-index="0">
         <div class="question">❓ ${escapeHtml(entry.question)}</div>
-        <div class="carousel">
-          <div class="carousel-viewport">
-            <div class="carousel-track" id="track-${entryId}" style="transform: translateX(-${current * 100}%);">
+        <div class="slider-wrap">
+          <button class="slider-arrow" data-action="prev" data-entry-id="${entryId}" ${total <= 1 ? 'disabled' : ''}>‹</button>
+          <div class="slider-viewport">
+            <div class="slider-track" data-track-id="${entryId}">
               ${slidesHtml}
             </div>
           </div>
-          <div class="slide-controls">
-            <button class="nav-btn" data-action="prev" data-entry-id="${entryId}" ${current === 0 ? 'disabled' : ''}>‹</button>
-            <span class="slide-indicator">${current + 1} / ${total}</span>
-            <button class="nav-btn" data-action="next" data-entry-id="${entryId}" ${current >= total - 1 ? 'disabled' : ''}>›</button>
-            <button class="small-btn" data-action="delete-entry" data-entry-id="${entryId}" style="margin-left:auto;">删除整个问题</button>
-          </div>
+          <button class="slider-arrow" data-action="next" data-entry-id="${entryId}" ${total <= 1 ? 'disabled' : ''}>›</button>
         </div>
+        ${total > 1 ? `<div class="slider-dots" data-dots-id="${entryId}">${dotsHtml}</div>` : ''}
       </div>
     `;
   });
 
   archiveListDiv.innerHTML = html;
-  bindEvents();
+
+  // 重新绑定滑动 / 标记事件
+  bindSliderEvents();
+  bindMarkEvents();
 }
 
-// ---------- 事件绑定 ----------
-function bindEvents() {
-  // 左右切换
-  document.querySelectorAll('[data-action="prev"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const entryId = btn.dataset.entryId;
-      if (carouselState[entryId] > 0) {
-        carouselState[entryId]--;
-        updateCarousel(entryId);
-      }
-    });
+// ---------- 滑动逻辑 ----------
+function updateSlider(entryId, newIndex) {
+  const card = document.querySelector(`.archive-card[data-entry-id="${entryId}"]`);
+  if (!card) return;
+  const entry = archiveData.find(e => e.id === entryId);
+  if (!entry) return;
+  const total = entry.responses.length;
+  if (total === 0) return;
+
+  newIndex = Math.max(0, Math.min(total - 1, newIndex));
+  card.dataset.currentIndex = newIndex;
+
+  const track = card.querySelector('.slider-track');
+  if (track) {
+    track.style.transform = `translateX(-${newIndex * 100}%)`;
+  }
+
+  // 更新 dots
+  const dots = card.querySelectorAll('.dot');
+  dots.forEach((d, i) => {
+    d.classList.toggle('active', i === newIndex);
   });
-  document.querySelectorAll('[data-action="next"]').forEach(btn => {
+}
+
+function bindSliderEvents() {
+  document.querySelectorAll('.slider-arrow').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const entryId = btn.dataset.entryId;
-      const entry = archiveData.find(en => en.id === entryId);
-      if (entry && carouselState[entryId] < entry.responses.length - 1) {
-        carouselState[entryId]++;
-        updateCarousel(entryId);
-      }
+      const card = document.querySelector(`.archive-card[data-entry-id="${entryId}"]`);
+      if (!card) return;
+      const entry = archiveData.find(e => e.id === entryId);
+      if (!entry) return;
+      const total = entry.responses.length;
+      let cur = parseInt(card.dataset.currentIndex || '0', 10);
+      if (btn.dataset.action === 'prev') cur = Math.max(0, cur - 1);
+      if (btn.dataset.action === 'next') cur = Math.min(total - 1, cur + 1);
+      updateSlider(entryId, cur);
     });
   });
 
-  // 划重点
+  document.querySelectorAll('.dot').forEach(dot => {
+    dot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const entryId = dot.dataset.entryId;
+      const index = parseInt(dot.dataset.index, 10);
+      updateSlider(entryId, index);
+    });
+  });
+
+  // 触摸滑动
+  document.querySelectorAll('.slider-viewport').forEach(vp => {
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+    let moved = false;
+
+    vp.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      tracking = true;
+      moved = false;
+    }, { passive: true });
+
+    vp.addEventListener('touchmove', (e) => {
+      if (!tracking) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+        moved = true;
+      }
+    }, { passive: true });
+
+    vp.addEventListener('touchend', (e) => {
+      if (!tracking) return;
+      tracking = false;
+      if (!moved) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - startX;
+      if (Math.abs(dx) < 40) return;
+
+      const card = vp.closest('.archive-card');
+      if (!card) return;
+      const entryId = card.dataset.entryId;
+      const entry = archiveData.find(e => e.id === entryId);
+      if (!entry) return;
+      const total = entry.responses.length;
+      let cur = parseInt(card.dataset.currentIndex || '0', 10);
+
+      if (dx < 0) cur = Math.min(total - 1, cur + 1); // 左滑 -> 下一个
+      else cur = Math.max(0, cur - 1);                // 右滑 -> 上一个
+
+      updateSlider(entryId, cur);
+    });
+  });
+}
+
+// ---------- 标记逻辑 ----------
+function getSelectionOffsets(container) {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  const range = sel.getRangeAt(0);
+  if (range.collapsed) return null;
+
+  // 确保选区在 container 内
+  if (!container.contains(range.commonAncestorContainer)) return null;
+
+  // 计算相对于 container 文本内容的偏移
+  function getOffset(root, node, offset) {
+    let total = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+    let n;
+    while ((n = walker.nextNode())) {
+      if (n === node) {
+        return total + offset;
+      }
+      total += n.textContent.length;
+    }
+    return total;
+  }
+
+  let start = getOffset(container, range.startContainer, range.startOffset);
+  let end = getOffset(container, range.endContainer, range.endOffset);
+  if (start > end) [start, end] = [end, start];
+  return { start, end };
+}
+
+function bindMarkEvents() {
   document.querySelectorAll('[data-action="mark"]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const entryId = btn.dataset.entryId;
       const resId = btn.dataset.resId;
-      handleMark(entryId, resId);
+      const entry = archiveData.find(e => e.id === entryId);
+      if (!entry) return;
+      const res = entry.responses.find(r => r.id === resId);
+      if (!res) return;
+
+      // 找到对应的 response-text 元素
+      const textEl = document.querySelector(`.response-text[data-raw-id="${resId}"]`);
+      if (!textEl) return;
+
+      const offsets = getSelectionOffsets(textEl);
+      if (!offsets) {
+        alert('请先用鼠标或手指选中要标记的文字，再点「标记重点」。');
+        return;
+      }
+
+      // 防止选中空白
+      if (offsets.start === offsets.end) return;
+
+      if (!Array.isArray(res.highlights)) res.highlights = [];
+      res.highlights.push({ start: offsets.start, end: offsets.end });
+
+      // 清空选区
+      window.getSelection().removeAllRanges();
+
+      saveToStorage();
+      renderArchive();
     });
   });
 
-  // 删除单个回答
-  document.querySelectorAll('[data-action="delete-res"]').forEach(btn => {
+  document.querySelectorAll('[data-action="clear-mark"]').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       const entryId = btn.dataset.entryId;
       const resId = btn.dataset.resId;
-      deleteResponse(entryId, resId);
-    });
-  });
-
-  // 删除整个问题
-  document.querySelectorAll('[data-action="delete-entry"]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const entryId = btn.dataset.entryId;
-      deleteEntry(entryId);
+      const entry = archiveData.find(e => e.id === entryId);
+      if (!entry) return;
+      const res = entry.responses.find(r => r.id === resId);
+      if (!res) return;
+      res.highlights = [];
+      saveToStorage();
+      renderArchive();
     });
   });
 }
 
-// 更新单个卡片轮播位置，不重新渲染整个列表（保持滚动位置）
-function updateCarousel(entryId) {
-  const track = document.getElementById(`track-${entryId}`);
-  if (!track) return;
-  const current = carouselState[entryId];
-  track.style.transform = `translateX(-${current * 100}%)`;
-
-  // 更新箭头状态和指示器
-  const card = track.closest('.archive-card');
-  const entry = archiveData.find(e => e.id === entryId);
-  if (!entry) return;
-  const total = entry.responses.length;
-
-  const prevBtn = card.querySelector('[data-action="prev"]');
-  const nextBtn = card.querySelector('[data-action="next"]');
-  const indicator = card.querySelector('.slide-indicator');
-
-  if (prevBtn) prevBtn.disabled = current === 0;
-  if (nextBtn) nextBtn.disabled = current >= total - 1;
-  if (indicator) indicator.textContent = `${current + 1} / ${total}`;
-}
-
-// ---------- 划重点逻辑 ----------
-function handleMark(entryId, resId) {
-  const entry = archiveData.find(e => e.id === entryId);
-  if (!entry) return;
-  const response = entry.responses.find(r => r.id === resId);
-  if (!response) return;
-
-  const textEl = document.getElementById(`res-text-${resId}`);
-  if (!textEl) return;
-
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
-    alert('请先用手指 / 鼠标选中要划重点的文字，再点「划重点」。');
-    return;
-  }
-
-  const range = selection.getRangeAt(0);
-
-  // 确认选区在这个回答的文本范围内
-  if (!textEl.contains(range.startContainer) || !textEl.contains(range.endContainer)) {
-    alert('请选中当前回答里的文字。');
-    return;
-  }
-
-  // 计算在原始纯文本里的偏移
-  const startOffset = getTextOffset(textEl, range.startContainer, range.startOffset);
-  const endOffset = getTextOffset(textEl, range.endContainer, range.endOffset);
-
-  if (startOffset === null || endOffset === null || startOffset >= endOffset) {
-    alert('选区有误，请重新选择。');
-    return;
-  }
-
-  // 保存 marks（基于纯文本偏移）
-  if (!Array.isArray(response.marks)) response.marks = [];
-  response.marks.push({ start: startOffset, end: endOffset });
-
-  // 合并重叠
-  response.marks = mergeMarks(response.marks);
-
-  saveToStorage();
-
-  // 局部更新当前 slide 的文本（不重新渲染整个列表，避免丢失轮播位置）
-  textEl.innerHTML = renderTextWithMarks(response.text, response.marks);
-
-  // 清除选区
-  selection.removeAllRanges();
-}
-
-// 计算节点在容器纯文本中的偏移（忽略 HTML 标签，只数文本）
-function getTextOffset(container, node, offset) {
-  let total = 0;
-  let found = false;
-
-  function walk(n) {
-    if (found) return;
-    if (n === node) {
-      if (n.nodeType === Node.TEXT_NODE) {
-        total += offset;
-      } else {
-        // 如果选中的是元素节点，累加它之前子节点的文本
-        for (let i = 0; i < offset && i < n.childNodes.length; i++) {
-          total += n.childNodes[i].textContent.length;
-        }
-      }
-      found = true;
-      return;
-    }
-    if (n.nodeType === Node.TEXT_NODE) {
-      total += n.textContent.length;
-    } else {
-      for (const child of n.childNodes) {
-        walk(child);
-        if (found) return;
-      }
-    }
-  }
-
-  walk(container);
-  return found ? total : null;
-}
-
-// 合并重叠的区间
-function mergeMarks(marks) {
-  if (marks.length <= 1) return marks;
-  const sorted = [...marks].sort((a, b) => a.start - b.start);
-  const merged = [{ ...sorted[0] }];
-  for (let i = 1; i < sorted.length; i++) {
-    const last = merged[merged.length - 1];
-    const cur = sorted[i];
-    if (cur.start <= last.end) {
-      last.end = Math.max(last.end, cur.end);
-    } else {
-      merged.push({ ...cur });
-    }
-  }
-  return merged;
-}
-
-// ---------- 新增档案 ----------
+// ---------- 添加新档案 ----------
 function addNewEntry() {
   const question = questionInput.value.trim();
   const ai = aiSelect.value;
@@ -347,29 +350,25 @@ function addNewEntry() {
     return;
   }
 
-  const existingEntry = archiveData.find(
-    entry => entry.question.toLowerCase() === question.toLowerCase()
-  );
-
   const newResponse = {
     id: generateId(),
     ai: ai,
     text: responseText,
-    marks: []
+    highlights: []
   };
+
+  const existingEntry = archiveData.find(
+    entry => entry.question.toLowerCase() === question.toLowerCase()
+  );
 
   if (existingEntry) {
     existingEntry.responses.push(newResponse);
-    // 切换到新添加的那一页
-    carouselState[existingEntry.id] = existingEntry.responses.length - 1;
   } else {
-    const newEntry = {
+    archiveData.push({
       id: generateId(),
       question: question,
       responses: [newResponse]
-    };
-    archiveData.push(newEntry);
-    carouselState[newEntry.id] = 0;
+    });
   }
 
   saveToStorage();
@@ -378,37 +377,9 @@ function addNewEntry() {
   responseInput.focus();
 }
 
-// ---------- 删除 ----------
-function deleteResponse(entryId, resId) {
-  const entry = archiveData.find(e => e.id === entryId);
-  if (!entry) return;
-  if (entry.responses.length <= 1) {
-    if (!confirm('这是该问题下最后一个回答，删除后会同时删除这个问题。确定吗？')) return;
-    deleteEntry(entryId);
-    return;
-  }
-  if (!confirm('确定删除这个回答版本吗？')) return;
-  entry.responses = entry.responses.filter(r => r.id !== resId);
-  // 修正当前索引
-  if (carouselState[entryId] >= entry.responses.length) {
-    carouselState[entryId] = entry.responses.length - 1;
-  }
-  saveToStorage();
-  renderArchive();
-}
-
-function deleteEntry(entryId) {
-  if (!confirm('确定删除这个问题及其所有回答吗？')) return;
-  archiveData = archiveData.filter(e => e.id !== entryId);
-  delete carouselState[entryId];
-  saveToStorage();
-  renderArchive();
-}
-
-// ---------- 清空表单 / 全部 ----------
 function clearForm() {
   questionInput.value = '';
-  aiSelect.value = 'ChatGPT';
+  aiSelect.value = 'DeepSeek';
   responseInput.value = '';
   questionInput.focus();
 }
@@ -418,12 +389,12 @@ function clearAllArchives() {
     alert('还没有任何档案。');
     return;
   }
-  if (!confirm('⚠️ 确定要删除所有存档吗？此操作不可撤销。')) return;
-  archiveData = [];
-  Object.keys(carouselState).forEach(k => delete carouselState[k]);
-  saveToStorage();
-  renderArchive();
-  clearForm();
+  if (window.confirm('⚠️ 确定要删除所有存档吗？此操作不可撤销。')) {
+    archiveData = [];
+    saveToStorage();
+    renderArchive();
+    clearForm();
+  }
 }
 
 // ---------- 初始化 ----------
